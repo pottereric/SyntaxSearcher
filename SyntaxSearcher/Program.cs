@@ -1,6 +1,7 @@
 ﻿using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
@@ -10,7 +11,8 @@ namespace SyntaxSearcher
     {
         private static void Main(string[] args)
         {
-            SearchDirectoryForNodes<CasePatternSwitchLabelSyntax>(@"C:\Projects\PatternMatching\ShapeDemo");
+            SearchDirectoryForNodes<CasePatternSwitchLabelSyntax>(@"C:\Projects\reference");
+            //SearchDirectoryForNodes<CasePatternSwitchLabelSyntax>(@"C:\Projects\PatternMatching\ShapeDemo");
 
             Console.WriteLine("Press Any Key To Continue");
             Console.ReadKey();
@@ -23,7 +25,12 @@ namespace SyntaxSearcher
             {
                 if (Path.GetExtension(file) == ".cs")
                 {
-                    SearchFileForNodes<T>(file);
+                    var nodes = SearchFileForNodes<T>(file);
+
+                    if (nodes != null && nodes.Count() > 0)
+                    {
+                        PrintFileData(file, nodes);
+                    }
                 }
             }
 
@@ -34,21 +41,26 @@ namespace SyntaxSearcher
             }
         }
 
-        public static void SearchFileForNodes<T>(string filePath) where T : CSharpSyntaxNode
+        private static void PrintFileData<T>(string file, IEnumerable<T> nodes) where T : CSharpSyntaxNode
         {
-            Console.WriteLine(filePath);
+            Console.WriteLine(file);
 
-            var fileContents = File.ReadAllText(filePath);
-            var ast = CSharpSyntaxTree.ParseText(fileContents).GetRoot();
-
-            var patthenNodes = ast.DescendantNodes().OfType<T>();
-
-            foreach (var whenNode in patthenNodes)
+            foreach (var node in nodes)
             {
-                Console.WriteLine($"Line: {whenNode.GetLocation().GetLineSpan().StartLinePosition.Line + 1}");
+                Console.WriteLine($"Line: {node.GetLocation().GetLineSpan().StartLinePosition.Line + 1}");
             }
 
             Console.WriteLine();
+        }
+
+        public static IEnumerable<T> SearchFileForNodes<T>(string filePath) where T : CSharpSyntaxNode
+        {
+            var fileContents = File.ReadAllText(filePath);
+            var ast = CSharpSyntaxTree.ParseText(fileContents).GetRoot();
+
+            var nodes = ast.DescendantNodes().OfType<T>();
+
+            return nodes;
         }
     }
 }
