@@ -20,24 +20,32 @@ namespace SyntaxSearcher
 
         public static void SearchDirectoryForNodes<T>(string path) where T : CSharpSyntaxNode
         {
-            var files = Directory.GetFiles(path);
-            foreach (var file in files)
+            try
             {
-                if (Path.GetExtension(file) == ".cs")
+                var files = Directory.GetFiles(path);
+                foreach (var file in files)
                 {
-                    var nodes = SearchFileForNodes<T>(file);
-
-                    if (nodes != null && nodes.Count() > 0)
+                    if (Path.GetExtension(file) == ".cs")
                     {
-                        PrintFileData(file, nodes);
+                        var nodes = SearchFileForNodes<T>(file);
+
+                        if (nodes != null && nodes.Count() > 0)
+                        {
+                            PrintFileData(file, nodes);
+                        }
                     }
                 }
-            }
 
-            var subDirs = Directory.GetDirectories(path);
-            foreach (var subDir in subDirs)
+                var subDirs = Directory.GetDirectories(path);
+                foreach (var subDir in subDirs)
+                {
+                    SearchDirectoryForNodes<T>(subDir);
+                }
+            }
+            catch (Exception ex)
             {
-                SearchDirectoryForNodes<T>(subDir);
+                Console.WriteLine($"Error Reading Directory: {path}");
+                Console.WriteLine($"Error Message: {ex.Message}");
             }
         }
 
